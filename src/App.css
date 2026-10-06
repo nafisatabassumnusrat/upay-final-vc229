@@ -747,6 +747,7 @@ body {
 .footer-credit {
   text-align: center;
   margin-top: 32px;
+  margin-bottom: 32px;
   font-size: 0.875rem;
   color: var(--gray-500);
 }
