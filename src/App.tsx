@@ -3,7 +3,7 @@ import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { 
   FileText, CheckCircle, AlertCircle, XCircle, 
   UploadCloud, HelpCircle, RotateCcw, ChevronRight, 
-  Settings2, File, MoreVertical, Trash2, Calendar
+  Settings2, File as FileIcon, MoreVertical, Trash2, Calendar
 } from 'lucide-react';
 import './App.css';
 
@@ -220,6 +220,53 @@ const App = () => {
     return { readyCount: ready, totalCount: requirements.length, blockCount: block, issueCount: issue };
   }, [requirements, matches, expiries]);
 
+  const loadDemoData = async () => {
+    try {
+      const demoFiles: UploadedFile[] = [];
+      const newMatches: Record<string, string> = {};
+      const newExpiries: Record<string, string> = {};
+      
+      for (let i = 0; i < requirements.length; i++) {
+        const req = requirements[i];
+        
+        // Create a dummy PDF in memory
+        const pdfDoc = await PDFDocument.create();
+        const page = pdfDoc.addPage();
+        page.drawText(`Demo File for: ${req.title_en}`, { x: 50, y: 700, size: 20 });
+        const pdfBytes = await pdfDoc.save();
+        
+        const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+        const file = new File([blob], `${req.title_en.toLowerCase().replace(/ /g, '_')}.pdf`, { type: 'application/pdf' });
+        
+        const fileId = Math.random().toString(36).substring(7);
+        const hash = await getHash(await file.arrayBuffer());
+        
+        demoFiles.push({
+          id: fileId,
+          file,
+          name: file.name,
+          size: file.size,
+          hash,
+          numPages: 1,
+          isDuplicate: false
+        });
+        
+        newMatches[req.id] = fileId;
+        
+        if (req.has_expiry) {
+          // Set expiry to future date (e.g. 2026-12-31)
+          newExpiries[req.id] = '2026-12-31';
+        }
+      }
+      
+      setFiles(demoFiles);
+      setMatches(newMatches);
+      setExpiries(newExpiries);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const generatePackage = async () => {
     if (!tender) return;
     setIsGenerating(true);
@@ -280,6 +327,9 @@ const App = () => {
             <span className="sep">|</span>
             <span className={lang === 'bn' ? 'active' : ''} onClick={() => setLang('bn')}>বাংলা</span>
           </div>
+          <button className="nav-btn font-semibold text-blue-600" onClick={loadDemoData}>
+            {t('Auto Fill (Demo)', 'অটো ফিল (ডেমো)')}
+          </button>
           <button className="nav-btn" onClick={() => { setFiles([]); setMatches({}); setExpiries({}); }}>
             <RotateCcw size={16} /> {t('Reset', 'রিসেট')}
           </button>
@@ -652,7 +702,7 @@ const App = () => {
             disabled={!canGenerate()}
             onClick={generatePackage}
           >
-            <File size={16} /> {isGenerating ? t('Generating...', 'তৈরি হচ্ছে...') : t('Generate Package', 'প্যাকেজ তৈরি করুন')} <ChevronRight size={16} />
+            <FileIcon size={16} /> {isGenerating ? t('Generating...', 'তৈরি হচ্ছে...') : t('Generate Package', 'প্যাকেজ তৈরি করুন')} <ChevronRight size={16} />
           </button>
         </div>
       </div>
