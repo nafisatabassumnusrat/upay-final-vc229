@@ -1,5 +1,8 @@
-# TenderPack
+<div align="center">
 
+<img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&section=header&reversal=false&text=TenderPack&textBg=false&fontSize=70&fontAlign=50&fontAlignY=50&rotate=0&strokeWidth=0&descSize=20&descAlign=50&descAlignY=60" width="100%" />
+
+</div>
 ### Smart Tender Package Builder
 
 > A frontend-only document workflow for validating, organizing, and generating submission-ready tender PDF packages.
