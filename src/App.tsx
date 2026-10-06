@@ -527,8 +527,20 @@ const App = () => {
                           <div className="fc-match-badge ok">
                             <CheckCircle size={12}/> Matched
                           </div>
-                          <div className="fc-match-target">
-                            → {reqMatch.title_en}
+                          <div className="fc-match-target flex items-center">
+                            → 
+                            <select 
+                              className="ml-1 bg-transparent border-none text-xs outline-none cursor-pointer hover:text-blue-600 text-gray-600"
+                              value={reqMatchId || ''}
+                              onChange={(e) => matchFile(e.target.value, f.id)}
+                            >
+                              <option value="">Select Requirement</option>
+                              {requirements.map(r => (
+                                <option key={r.id} value={r.id} disabled={!!matches[r.id] && matches[r.id] !== f.id}>
+                                  {r.title_en}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                           
                           {status === 'OK' && (
@@ -539,7 +551,38 @@ const App = () => {
                           {status === 'Expiry date needed' && (
                             <div className="fc-invalid">
                               <AlertCircle size={12}/> Expiry date required
-                              <span className="text-red-500 ml-2"><Calendar size={12} className="inline mr-1"/>(Missing)</span>
+                              <span className="text-red-500 ml-2 flex items-center"><Calendar size={12} className="mr-1"/>
+                                <input 
+                                  type="date" 
+                                  className="text-xs ml-1 border border-red-200 rounded px-1 outline-none text-red-600" 
+                                  value={expiries[reqMatch.id] || ''}
+                                  onChange={e => setExpiries({...expiries, [reqMatch.id]: e.target.value})}
+                                />
+                              </span>
+                            </div>
+                          )}
+                          {status === 'Expired' && (
+                            <div className="fc-invalid">
+                              <XCircle size={12}/> Expired
+                              <span className="text-red-500 ml-2 flex items-center"><Calendar size={12} className="mr-1"/>
+                                <input 
+                                  type="date" 
+                                  className="text-xs ml-1 border border-red-200 rounded px-1 outline-none text-red-600" 
+                                  value={expiries[reqMatch.id] || ''}
+                                  onChange={e => setExpiries({...expiries, [reqMatch.id]: e.target.value})}
+                                />
+                              </span>
+                            </div>
+                          )}
+                          {status === 'OK' && reqMatch.has_expiry && (
+                            <div className="fc-valid flex items-center mt-1 text-xs">
+                              <Calendar size={12} className="mr-1"/>
+                              <input 
+                                type="date" 
+                                className="text-xs ml-1 border border-green-200 rounded px-1 outline-none text-green-600 bg-transparent" 
+                                value={expiries[reqMatch.id] || ''}
+                                onChange={e => setExpiries({...expiries, [reqMatch.id]: e.target.value})}
+                              />
                             </div>
                           )}
                         </>
@@ -557,8 +600,20 @@ const App = () => {
                           <div className="fc-match-badge neutral">
                             <XCircle size={12}/> Not Matched
                           </div>
-                          <div className="fc-match-target text-gray-400">
-                            → Select Requirement
+                          <div className="fc-match-target text-gray-400 flex items-center">
+                            → 
+                            <select 
+                              className="ml-1 bg-transparent border-none text-xs outline-none cursor-pointer hover:text-blue-600"
+                              value={reqMatchId || ''}
+                              onChange={(e) => matchFile(e.target.value, f.id)}
+                            >
+                              <option value="">Select Requirement</option>
+                              {requirements.map(r => (
+                                <option key={r.id} value={r.id} disabled={!!matches[r.id] && matches[r.id] !== f.id}>
+                                  {r.title_en}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </>
                       )}
