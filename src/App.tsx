@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { 
-  FileText, CheckCircle, AlertCircle, XCircle, FileWarning, 
-  UploadCloud, X, HelpCircle, RotateCcw, ChevronRight, 
+  FileText, CheckCircle, AlertCircle, XCircle, 
+  UploadCloud, HelpCircle, RotateCcw, ChevronRight, 
   Settings2, File, MoreVertical, Trash2, Calendar
 } from 'lucide-react';
 import './App.css';
@@ -23,11 +23,12 @@ type Requirement = {
   mandatory: boolean;
   has_expiry: boolean;
   description_en?: string;
+  description_bn?: string;
 };
 
 type UploadedFile = {
   id: string;
-  file: File;
+  file: window.File;
   name: string;
   size: number;
   hash: string;
@@ -41,7 +42,6 @@ type StatusType = 'Missing' | 'Expiry date needed' | 'Expired' | 'Not provided' 
 
 const App = () => {
   const [lang, setLang] = useState<'en' | 'bn'>('en');
-  // Mock data to match the screenshot for demo purposes before a real file is loaded
   const [tender, setTender] = useState<TenderInfo | null>({
     title: "Supply of IT Equipment",
     tender_id: "T-2026-0417",
@@ -51,15 +51,15 @@ const App = () => {
   });
   
   const [requirements, setRequirements] = useState<Requirement[]>([
-    { id: 'R01', order: 1, title_en: 'Trade License', title_bn: 'ট্রেড লাইসেন্স', mandatory: true, has_expiry: true, description_en: 'Business registration certificate' },
-    { id: 'R02', order: 2, title_en: 'TIN Certificate', title_bn: 'টিআইএন সার্টিফিকেট', mandatory: true, has_expiry: false, description_en: 'Tax identification certificate' },
-    { id: 'R03', order: 3, title_en: 'Bank Solvency Certificate', title_bn: 'ব্যাংক সচ্ছলতা সনদ', mandatory: true, has_expiry: true, description_en: 'Bank solvency certificate' },
-    { id: 'R04', order: 4, title_en: 'Experience Certificate', title_bn: 'অভিজ্ঞতা সনদ', mandatory: true, has_expiry: false, description_en: 'Similar work experience' },
-    { id: 'R05', order: 5, title_en: 'Technical Proposal', title_bn: 'প্রযুক্তিগত প্রস্তাবনা', mandatory: false, has_expiry: false, description_en: 'Technical proposal document' }
+    { id: 'R01', order: 1, title_en: 'Trade License', title_bn: 'ট্রেড লাইসেন্স', mandatory: true, has_expiry: true, description_en: 'Business registration certificate', description_bn: 'ব্যবসা নিবন্ধন সনদ' },
+    { id: 'R02', order: 2, title_en: 'TIN Certificate', title_bn: 'টিআইএন সার্টিফিকেট', mandatory: true, has_expiry: false, description_en: 'Tax identification certificate', description_bn: 'কর সনাক্তকরণ সনদ' },
+    { id: 'R03', order: 3, title_en: 'Bank Solvency Certificate', title_bn: 'ব্যাংক সচ্ছলতা সনদ', mandatory: true, has_expiry: true, description_en: 'Bank solvency certificate', description_bn: 'ব্যাংক সচ্ছলতার প্রমাণপত্র' },
+    { id: 'R04', order: 4, title_en: 'Experience Certificate', title_bn: 'অভিজ্ঞতা সনদ', mandatory: true, has_expiry: false, description_en: 'Similar work experience', description_bn: 'সমজাতীয় কাজের অভিজ্ঞতা' },
+    { id: 'R05', order: 5, title_en: 'Technical Proposal', title_bn: 'প্রযুক্তিগত প্রস্তাবনা', mandatory: false, has_expiry: false, description_en: 'Technical proposal document', description_bn: 'টেকনিক্যাল প্রপোজাল ডকুমেন্ট' }
   ]);
 
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [matches, setMatches] = useState<Record<string, string>>({}); // reqId -> fileId
+  const [matches, setMatches] = useState<Record<string, string>>({}); 
   const [expiries, setExpiries] = useState<Record<string, string>>({}); 
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -79,7 +79,7 @@ const App = () => {
           setErrorMsg('');
         }
       } catch (err) {
-        setErrorMsg('Failed to parse JSON.');
+        setErrorMsg(t('Failed to parse JSON.', 'JSON পার্স করতে ব্যর্থ হয়েছে।'));
       }
     };
     reader.readAsText(file);
@@ -122,7 +122,7 @@ const App = () => {
           const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
           numPages = pdfDoc.getPageCount();
         } catch (err) {
-          fileError = 'Damaged PDF';
+          fileError = t('Damaged PDF', 'ক্ষতিগ্রস্ত PDF');
         }
 
         const id = Math.random().toString(36).substring(7);
@@ -287,8 +287,8 @@ const App = () => {
           <div className="logo-box">
             <FileText className="logo-icon" />
           </div>
-          <span className="logo-text">TenderPack</span>
-          <span className="logo-subtitle">Smart Tender Package Builder</span>
+          <span className="logo-text">{t('Tender Document Package Builder', 'টেন্ডার ডকুমেন্ট প্যাকেজ বিল্ডার')}</span>
+          <span className="logo-subtitle">{t('Smart Tender Package Builder', 'স্মার্ট টেন্ডার প্যাকেজ বিল্ডার')}</span>
         </div>
         <div className="nav-right">
           <div className="lang-toggle">
@@ -296,11 +296,11 @@ const App = () => {
             <span className="sep">|</span>
             <span className={lang === 'bn' ? 'active' : ''} onClick={() => setLang('bn')}>বাংলা</span>
           </div>
-          <button className="nav-btn">
-            <RotateCcw size={16} /> Reset
+          <button className="nav-btn" onClick={() => { setFiles([]); setMatches({}); setExpiries({}); }}>
+            <RotateCcw size={16} /> {t('Reset', 'রিসেট')}
           </button>
           <button className="nav-btn">
-            <HelpCircle size={16} /> Help
+            <HelpCircle size={16} /> {t('Help', 'সাহায্য')}
           </button>
         </div>
       </nav>
@@ -313,23 +313,23 @@ const App = () => {
               <FileText size={32} color="#1d4ed8" />
             </div>
             <div className="tender-details">
-              <div className="td-label">TENDER OVERVIEW</div>
+              <div className="td-label">{t('TENDER OVERVIEW', 'টেন্ডার ওভারভিউ')}</div>
               <h2 className="td-title">{tender?.title}</h2>
               <div className="td-meta">
                 <div className="meta-item">
-                  <span className="meta-label">Tender ID</span>
+                  <span className="meta-label">{t('Tender ID', 'টেন্ডার আইডি')}</span>
                   <span className="meta-value">{tender?.tender_id}</span>
                 </div>
                 <div className="meta-item">
-                  <span className="meta-label">Procuring Entity</span>
+                  <span className="meta-label">{t('Procuring Entity', 'ক্রয়কারী প্রতিষ্ঠান')}</span>
                   <span className="meta-value">{tender?.procuring_entity}</span>
                 </div>
                 <div className="meta-item">
-                  <span className="meta-label">Bidder</span>
+                  <span className="meta-label">{t('Bidder', 'দরদাতা')}</span>
                   <span className="meta-value">{tender?.bidder}</span>
                 </div>
                 <div className="meta-item date-item">
-                  <span className="meta-label">Submission Deadline</span>
+                  <span className="meta-label">{t('Submission Deadline', 'জমার শেষ তারিখ')}</span>
                   <span className="meta-value flex-center">
                     <Calendar size={14} className="mr-1" />
                     {tender?.submission_deadline ? new Date(tender.submission_deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric'}) : ''}
@@ -341,8 +341,8 @@ const App = () => {
           
           <div className="package-readiness">
             <div className="pr-header">
-              <div className="pr-label">PACKAGE READINESS</div>
-              <div className="pr-stats"><strong>{readyCount} / {totalCount}</strong> requirements ready</div>
+              <div className="pr-label">{t('PACKAGE READINESS', 'প্যাকেজ প্রস্তুতি')}</div>
+              <div className="pr-stats"><strong>{readyCount} / {totalCount}</strong> {t('requirements ready', 'টি প্রয়োজনীয়তা প্রস্তুত')}</div>
             </div>
             <div className="progress-bar-container">
               <div className="progress-bar">
@@ -358,8 +358,8 @@ const App = () => {
           <div className="step active">
             <div className="step-circle">1</div>
             <div className="step-text">
-              <div className="step-title">Requirements</div>
-              <div className="step-sub">View required documents</div>
+              <div className="step-title">{t('Requirements', 'প্রয়োজনীয়তা')}</div>
+              <div className="step-sub">{t('View required documents', 'প্রয়োজনীয় নথি দেখুন')}</div>
             </div>
           </div>
           <ChevronRight className="step-arrow" size={16} />
@@ -367,8 +367,8 @@ const App = () => {
           <div className="step">
             <div className="step-circle muted">2</div>
             <div className="step-text">
-              <div className="step-title muted">Upload</div>
-              <div className="step-sub">Add your PDF files</div>
+              <div className="step-title muted">{t('Upload', 'আপলোড')}</div>
+              <div className="step-sub">{t('Add your PDF files', 'আপনার পিডিএফ ফাইল যোগ করুন')}</div>
             </div>
           </div>
           <ChevronRight className="step-arrow" size={16} />
@@ -376,8 +376,8 @@ const App = () => {
           <div className="step">
             <div className="step-circle muted">3</div>
             <div className="step-text">
-              <div className="step-title muted">Match</div>
-              <div className="step-sub">Link files to requirements</div>
+              <div className="step-title muted">{t('Match', 'মিলান')}</div>
+              <div className="step-sub">{t('Link files to requirements', 'নথিগুলো লিঙ্ক করুন')}</div>
             </div>
           </div>
           <ChevronRight className="step-arrow" size={16} />
@@ -385,8 +385,8 @@ const App = () => {
           <div className="step">
             <div className="step-circle muted">4</div>
             <div className="step-text">
-              <div className="step-title muted">Verify</div>
-              <div className="step-sub">Check expiry & validation</div>
+              <div className="step-title muted">{t('Verify', 'যাচাই')}</div>
+              <div className="step-sub">{t('Check expiry & validation', 'মেয়াদ এবং বৈধতা দেখুন')}</div>
             </div>
           </div>
           <ChevronRight className="step-arrow" size={16} />
@@ -394,8 +394,8 @@ const App = () => {
           <div className="step">
             <div className="step-circle muted">5</div>
             <div className="step-text">
-              <div className="step-title muted">Generate</div>
-              <div className="step-sub">Create final package</div>
+              <div className="step-title muted">{t('Generate', 'তৈরি করুন')}</div>
+              <div className="step-sub">{t('Create final package', 'চূড়ান্ত প্যাকেজ তৈরি করুন')}</div>
             </div>
           </div>
         </section>
@@ -409,12 +409,12 @@ const App = () => {
               <div className="ph-left">
                 <div className="ph-icon"><FileText size={20} color="#2563eb" /></div>
                 <div>
-                  <h3 className="ph-title">Required Documents</h3>
-                  <div className="ph-sub">All required documents for this tender</div>
+                  <h3 className="ph-title">{t('Required Documents', 'প্রয়োজনীয় নথিপত্র')}</h3>
+                  <div className="ph-sub">{t('All required documents for this tender', 'এই টেন্ডারের জন্য সমস্ত প্রয়োজনীয় নথি')}</div>
                 </div>
               </div>
               <div className="ph-right">
-                <span className="req-count">{requirements.length} requirements</span>
+                <span className="req-count">{requirements.length} {t('requirements', 'টি প্রয়োজনীয়তা')}</span>
                 <Settings2 size={18} color="#64748b" />
               </div>
             </div>
@@ -422,11 +422,11 @@ const App = () => {
             <div className="req-table">
               <div className="rt-header">
                 <div className="rt-col rt-num">#</div>
-                <div className="rt-col rt-name">Document Name</div>
-                <div className="rt-col rt-type">Type</div>
-                <div className="rt-col rt-expiry">Expiry</div>
-                <div className="rt-col rt-status">Status</div>
-                <div className="rt-col rt-match">Matched File</div>
+                <div className="rt-col rt-name">{t('Document Name', 'নথির নাম')}</div>
+                <div className="rt-col rt-type">{t('Type', 'প্রকার')}</div>
+                <div className="rt-col rt-expiry">{t('Expiry', 'মেয়াদ')}</div>
+                <div className="rt-col rt-status">{t('Status', 'অবস্থা')}</div>
+                <div className="rt-col rt-match">{t('Matched File', 'মিলিত ফাইল')}</div>
               </div>
               
               <div className="rt-body">
@@ -441,36 +441,37 @@ const App = () => {
                       </div>
                       <div className="rt-col rt-name">
                         <div className="doc-title">{lang === 'en' ? req.title_en : req.title_bn}</div>
-                        <div className="doc-sub">{req.description_en}</div>
+                        <div className="doc-sub">{lang === 'en' ? req.description_en : (req.description_bn || req.description_en)}</div>
                       </div>
                       <div className="rt-col rt-type">
                         <span className={`type-badge ${req.mandatory ? 'mandatory' : 'optional'}`}>
-                          {req.mandatory ? 'Mandatory' : 'Optional'}
+                          {req.mandatory ? t('Mandatory', 'বাধ্যতামূলক') : t('Optional', 'ঐচ্ছিক')}
                         </span>
                       </div>
                       <div className="rt-col rt-expiry">
                         {req.has_expiry ? (
-                          <span className="expiry-yes"><Calendar size={14} /> Yes</span>
+                          <span className="expiry-yes"><Calendar size={14} /> {t('Yes', 'হ্যাঁ')}</span>
                         ) : (
-                          <span className="expiry-no">— No</span>
+                          <span className="expiry-no">— {t('No', 'না')}</span>
                         )}
                       </div>
                       <div className="rt-col rt-status">
                         {status === 'OK' && <span className="status-badge ok"><CheckCircle size={16} className="fill-icon"/> OK</span>}
-                        {status === 'Missing' && <span className="status-badge missing"><XCircle size={16} className="fill-icon"/> Missing</span>}
-                        {status === 'Expiry date needed' && <span className="status-badge warning"><AlertCircle size={16} className="fill-icon"/> Expiry Date Needed</span>}
-                        {status === 'Not provided' && <span className="status-badge neutral"><XCircle size={16} className="fill-icon"/> Not Provided</span>}
+                        {status === 'Missing' && <span className="status-badge missing"><XCircle size={16} className="fill-icon"/> {t('Missing', 'অনুপস্থিত')}</span>}
+                        {status === 'Expiry date needed' && <span className="status-badge warning"><AlertCircle size={16} className="fill-icon"/> {t('Expiry Date Needed', 'মেয়াদ প্রয়োজন')}</span>}
+                        {status === 'Expired' && <span className="status-badge missing"><XCircle size={16} className="fill-icon"/> {t('Expired', 'মেয়াদ উত্তীর্ণ')}</span>}
+                        {status === 'Not provided' && <span className="status-badge neutral"><XCircle size={16} className="fill-icon"/> {t('Not Provided', 'দেওয়া হয়নি')}</span>}
                       </div>
                       <div className="rt-col rt-match">
                         {matchedFile ? (
                           <div className="matched-file-info">
                             <div className="mf-name">{matchedFile.name}</div>
-                            <div className="mf-meta">({matchedFile.numPages} pages · {formatSize(matchedFile.size)})</div>
+                            <div className="mf-meta">({matchedFile.numPages} {t('pages', 'পৃষ্ঠা')} · {formatSize(matchedFile.size)})</div>
                           </div>
                         ) : (
                           <div className="unmatched-info">
                             <div className="um-dash">—</div>
-                            <div className="um-text">No file matched</div>
+                            <div className="um-text">{t('No file matched', 'কোন ফাইল মেলেনি')}</div>
                           </div>
                         )}
                         <ChevronRight size={16} color="#94a3b8" className="ml-auto" />
@@ -484,22 +485,22 @@ const App = () => {
 
           {/* Right Column - Upload & Files */}
           <div className="right-panel">
-            <h3 className="section-title">Upload PDF Files</h3>
+            <h3 className="section-title">{t('Upload PDF Files', 'পিডিএফ ফাইল আপলোড করুন')}</h3>
             
             <label className="upload-box">
               <input type="file" multiple accept="application/pdf" className="hidden" onChange={handleUploadFiles} />
               <div className="ub-icon"><UploadCloud size={32} color="#3b82f6" /></div>
               <div className="ub-content">
-                <div className="ub-title">Drop PDF files here</div>
-                <div className="ub-or">or</div>
-                <div className="ub-btn">Browse Files</div>
-                <div className="ub-limits">PDF only · Max 30 files · Max 50 MB total</div>
+                <div className="ub-title">{t('Drop PDF files here', 'পিডিএফ ফাইল এখানে ড্রপ করুন')}</div>
+                <div className="ub-or">{t('or', 'বা')}</div>
+                <div className="ub-btn">{t('Browse Files', 'ফাইল ব্রাউজ করুন')}</div>
+                <div className="ub-limits">{t('PDF only · Max 30 files · Max 50 MB total', 'শুধুমাত্র পিডিএফ · সর্বোচ্চ ৩০ টি ফাইল · সর্বোচ্চ ৫০ মেগাবাইট')}</div>
               </div>
             </label>
 
             <div className="files-header">
-              <h3 className="section-title mb-0">Uploaded Files <span className="text-gray-400 font-normal">({files.length})</span></h3>
-              <span className="sort-dropdown">Sort by: Newest ▾</span>
+              <h3 className="section-title mb-0">{t('Uploaded Files', 'আপলোড করা ফাইল')} <span className="text-gray-400 font-normal">({files.length})</span></h3>
+              <span className="sort-dropdown">{t('Sort by: Newest', 'ক্রমানুসার: নতুন')} ▾</span>
             </div>
 
             <div className="files-list">
@@ -518,14 +519,14 @@ const App = () => {
                     
                     <div className="fc-details">
                       <div className="fc-name">{f.name}</div>
-                      <div className="fc-meta">{f.numPages} pages · {formatSize(f.size)}</div>
+                      <div className="fc-meta">{f.numPages} {t('pages', 'পৃষ্ঠা')} · {formatSize(f.size)}</div>
                     </div>
                     
                     <div className="fc-status-area">
                       {reqMatch ? (
                         <>
                           <div className="fc-match-badge ok">
-                            <CheckCircle size={12}/> Matched
+                            <CheckCircle size={12}/> {t('Matched', 'মিলিত')}
                           </div>
                           <div className="fc-match-target flex items-center">
                             → 
@@ -534,10 +535,10 @@ const App = () => {
                               value={reqMatchId || ''}
                               onChange={(e) => matchFile(e.target.value, f.id)}
                             >
-                              <option value="">Select Requirement</option>
+                              <option value="">{t('Select Requirement', 'প্রয়োজনীয়তা নির্বাচন করুন')}</option>
                               {requirements.map(r => (
                                 <option key={r.id} value={r.id} disabled={!!matches[r.id] && matches[r.id] !== f.id}>
-                                  {r.title_en}
+                                  {lang === 'en' ? r.title_en : r.title_bn}
                                 </option>
                               ))}
                             </select>
@@ -545,12 +546,12 @@ const App = () => {
                           
                           {status === 'OK' && (
                             <div className="fc-valid">
-                              <CheckCircle size={12}/> Valid
+                              <CheckCircle size={12}/> {t('Valid', 'বৈধ')}
                             </div>
                           )}
                           {status === 'Expiry date needed' && (
                             <div className="fc-invalid">
-                              <AlertCircle size={12}/> Expiry date required
+                              <AlertCircle size={12}/> {t('Expiry date required', 'মেয়াদ উত্তীর্ণের তারিখ প্রয়োজন')}
                               <span className="text-red-500 ml-2 flex items-center"><Calendar size={12} className="mr-1"/>
                                 <input 
                                   type="date" 
@@ -563,7 +564,7 @@ const App = () => {
                           )}
                           {status === 'Expired' && (
                             <div className="fc-invalid">
-                              <XCircle size={12}/> Expired
+                              <XCircle size={12}/> {t('Expired', 'মেয়াদ উত্তীর্ণ')}
                               <span className="text-red-500 ml-2 flex items-center"><Calendar size={12} className="mr-1"/>
                                 <input 
                                   type="date" 
@@ -589,16 +590,16 @@ const App = () => {
                       ) : f.isDuplicate ? (
                         <>
                           <div className="fc-match-badge error">
-                            <AlertCircle size={12}/> Duplicate
+                            <AlertCircle size={12}/> {t('Duplicate', 'অনুরূপ')}
                           </div>
                           <div className="fc-match-target text-gray-500">
-                            Same content as: {f.duplicateOf || 'another file'}
+                            {t('Same content as:', 'একই বিষয়বস্তু:')} {f.duplicateOf || 'another file'}
                           </div>
                         </>
                       ) : (
                         <>
                           <div className="fc-match-badge neutral">
-                            <XCircle size={12}/> Not Matched
+                            <XCircle size={12}/> {t('Not Matched', 'মিলিত নয়')}
                           </div>
                           <div className="fc-match-target text-gray-400 flex items-center">
                             → 
@@ -607,10 +608,10 @@ const App = () => {
                               value={reqMatchId || ''}
                               onChange={(e) => matchFile(e.target.value, f.id)}
                             >
-                              <option value="">Select Requirement</option>
+                              <option value="">{t('Select Requirement', 'প্রয়োজনীয়তা নির্বাচন করুন')}</option>
                               {requirements.map(r => (
                                 <option key={r.id} value={r.id} disabled={!!matches[r.id] && matches[r.id] !== f.id}>
-                                  {r.title_en}
+                                  {lang === 'en' ? r.title_en : r.title_bn}
                                 </option>
                               ))}
                             </select>
@@ -630,6 +631,11 @@ const App = () => {
           </div>
           
         </div>
+        
+        {/* Footer Credit */}
+        <footer className="footer-credit">
+          <p>{t('Developed by', 'ডেভেলপ করেছেন')} <strong>Nafisaa tabassum nusrat</strong></p>
+        </footer>
       </main>
 
       {/* Bottom Action Bar */}
@@ -639,30 +645,30 @@ const App = () => {
             <AlertCircle size={24} color="#ef4444" className="fill-icon" />
           </div>
           <div>
-            <div className="bb-title">PACKAGE GENERATION BLOCKED</div>
-            <div className="bb-sub">Resolve all blocking issues before generating the package.</div>
+            <div className="bb-title">{t('PACKAGE GENERATION BLOCKED', 'প্যাকেজ জেনারেশন ব্লক করা হয়েছে')}</div>
+            <div className="bb-sub">{t('Resolve all blocking issues before generating the package.', 'প্যাকেজ তৈরি করতে সমস্ত সমস্যা সমাধান করুন।')}</div>
           </div>
         </div>
         
         <div className="bb-center">
           <div className="bb-stat ok">
-            <CheckCircle size={16} className="fill-icon" /> {readyCount} Ready
+            <CheckCircle size={16} className="fill-icon" /> {readyCount} {t('Ready', 'প্রস্তুত')}
           </div>
           <div className="bb-stat warning">
-            <AlertCircle size={16} className="fill-icon" /> {blockCount - issueCount} Issue
+            <AlertCircle size={16} className="fill-icon" /> {blockCount - issueCount} {t('Issue', 'সমস্যা')}
           </div>
           <div className="bb-stat error">
-            <XCircle size={16} className="fill-icon" /> {issueCount} Missing
+            <XCircle size={16} className="fill-icon" /> {issueCount} {t('Missing', 'অনুপস্থিত')}
           </div>
         </div>
         
         <div className="bb-right">
           <button 
-            className="btn-generate-main disabled"
+            className={`btn-generate-main ${!canGenerate() ? 'disabled' : ''}`}
             disabled={!canGenerate()}
             onClick={generatePackage}
           >
-            <File size={16} /> Generate Package <ChevronRight size={16} />
+            <File size={16} /> {isGenerating ? t('Generating...', 'তৈরি হচ্ছে...') : t('Generate Package', 'প্যাকেজ তৈরি করুন')} <ChevronRight size={16} />
           </button>
         </div>
       </div>
