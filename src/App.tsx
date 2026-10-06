@@ -28,7 +28,7 @@ type Requirement = {
 
 type UploadedFile = {
   id: string;
-  file: window.File;
+  file: File;
   name: string;
   size: number;
   hash: string;
@@ -42,48 +42,33 @@ type StatusType = 'Missing' | 'Expiry date needed' | 'Expired' | 'Not provided' 
 
 const App = () => {
   const [lang, setLang] = useState<'en' | 'bn'>('en');
-  const [tender, setTender] = useState<TenderInfo | null>({
+  const [tender] = useState<TenderInfo | null>({
     title: "Supply of IT Equipment",
     tender_id: "T-2026-0417",
-    procuring_entity: "Example Directorate",
-    bidder: "Example Company Ltd.",
+    procuring_entity: "Directorate of Sample Services",
+    bidder: "Meghna Tech Solutions Ltd.",
     submission_deadline: "2026-10-20"
   });
   
-  const [requirements, setRequirements] = useState<Requirement[]>([
-    { id: 'R01', order: 1, title_en: 'Trade License', title_bn: 'ট্রেড লাইসেন্স', mandatory: true, has_expiry: true, description_en: 'Business registration certificate', description_bn: 'ব্যবসা নিবন্ধন সনদ' },
-    { id: 'R02', order: 2, title_en: 'TIN Certificate', title_bn: 'টিআইএন সার্টিফিকেট', mandatory: true, has_expiry: false, description_en: 'Tax identification certificate', description_bn: 'কর সনাক্তকরণ সনদ' },
-    { id: 'R03', order: 3, title_en: 'Bank Solvency Certificate', title_bn: 'ব্যাংক সচ্ছলতা সনদ', mandatory: true, has_expiry: true, description_en: 'Bank solvency certificate', description_bn: 'ব্যাংক সচ্ছলতার প্রমাণপত্র' },
-    { id: 'R04', order: 4, title_en: 'Experience Certificate', title_bn: 'অভিজ্ঞতা সনদ', mandatory: true, has_expiry: false, description_en: 'Similar work experience', description_bn: 'সমজাতীয় কাজের অভিজ্ঞতা' },
-    { id: 'R05', order: 5, title_en: 'Technical Proposal', title_bn: 'প্রযুক্তিগত প্রস্তাবনা', mandatory: false, has_expiry: false, description_en: 'Technical proposal document', description_bn: 'টেকনিক্যাল প্রপোজাল ডকুমেন্ট' }
+  const [requirements] = useState<Requirement[]>([
+    { id: 'R01', order: 1, title_en: 'Trade License', title_bn: 'ট্রেড লাইসেন্স', mandatory: true, has_expiry: true },
+    { id: 'R02', order: 2, title_en: 'TIN Certificate', title_bn: 'টিআইএন সনদ', mandatory: true, has_expiry: false },
+    { id: 'R03', order: 3, title_en: 'VAT Registration Certificate', title_bn: 'ভ্যাট নিবন্ধন সনদ', mandatory: true, has_expiry: false },
+    { id: 'R04', order: 4, title_en: 'Bank Solvency Certificate', title_bn: 'ব্যাংক সচ্ছলতা সনদ', mandatory: true, has_expiry: true },
+    { id: 'R05', order: 5, title_en: 'Experience Certificate', title_bn: 'অভিজ্ঞতার সনদ', mandatory: true, has_expiry: false },
+    { id: 'R06', order: 6, title_en: 'Audited Financial Statement', title_bn: 'নিরীক্ষিত আর্থিক বিবরণী', mandatory: false, has_expiry: false },
+    { id: 'R07', order: 7, title_en: 'Manufacturer\'s Authorization', title_bn: 'প্রস্তুতকারকের অনুমোদনপত্র', mandatory: false, has_expiry: true },
+    { id: 'R08', order: 8, title_en: 'Technical Proposal', title_bn: 'কারিগরি প্রস্তাব', mandatory: true, has_expiry: false },
+    { id: 'R09', order: 9, title_en: 'Financial Proposal', title_bn: 'আর্থিক প্রস্তাব', mandatory: true, has_expiry: false },
+    { id: 'R10', order: 10, title_en: 'Signed Declaration', title_bn: 'স্বাক্ষরিত ঘোষণাপত্র', mandatory: true, has_expiry: false }
   ]);
 
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [matches, setMatches] = useState<Record<string, string>>({}); 
   const [expiries, setExpiries] = useState<Record<string, string>>({}); 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   const t = (en: string, bn: string) => lang === 'en' ? en : bn;
-
-  const handleLoadJson = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const json = JSON.parse(evt.target?.result as string);
-        if (json.tender && json.requirements) {
-          setTender(json.tender);
-          setRequirements(json.requirements.sort((a: any, b: any) => a.order - b.order));
-          setErrorMsg('');
-        }
-      } catch (err) {
-        setErrorMsg(t('Failed to parse JSON.', 'JSON পার্স করতে ব্যর্থ হয়েছে।'));
-      }
-    };
-    reader.readAsText(file);
-  };
 
   const getHash = async (buffer: ArrayBuffer) => {
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -240,7 +225,6 @@ const App = () => {
     setIsGenerating(true);
     try {
       const mergedPdf = await PDFDocument.create();
-      const helveticaFont = await mergedPdf.embedFont(StandardFonts.Helvetica);
       const helveticaBold = await mergedPdf.embedFont(StandardFonts.HelveticaBold);
       
       const coverPage = mergedPdf.addPage([595.28, 841.89]);
